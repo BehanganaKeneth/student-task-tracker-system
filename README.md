@@ -57,7 +57,7 @@ To run the project locally, install the following:
 ### 1. Clone the repository
 
 ```bash
-git clone <your-github-repository-link>
+git clone <[your-github-repository-link](https://github.com/BehanganaKeneth/student-task-tracker-system/tree/main)>
 ```
 
 ### 2. Navigate to the project folder
