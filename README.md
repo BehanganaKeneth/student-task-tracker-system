@@ -1,24 +1,29 @@
 # Student Task Tracker System
 
-A Laravel 12 + Inertia.js + React task management platform for students and admins. It now includes role-based access, admin approval, group task invitations, group chat, a dedicated calendar view, and a dashboard with task analytics.
+A Laravel 12 + Inertia.js + React task management platform for students, team leaders, and admins. It includes role hierarchy, admin approval, group task collaboration, real-time discussion updates, in-app notifications, a calendar view, and a dashboard with analytics.
 
 ## Updated Features
 
 - Guest welcome page with Login and Create Account actions
 - Shared authentication flow for students and admins
-- Role-based sign-in and registration
+- Role-based sign-in and registration (student, team_leader, admin)
 - Admin approval workflow for new admin accounts
 - Email notifications for admin approval requests and approvals
 - Dashboard with task analytics, notifications, and quick capture
 - Task CRUD with status, priority, due date, reminder, recurrence, and effort tracking
 - List and Kanban views for task management
+- Kanban drag-and-drop with visual drop feedback
 - Search and filter controls for tasks
 - Group tasks with group name and email-based invitations
 - Invitation links sent to group members by email
 - Task discussion/chat page for owners and invited members
+- Real-time task discussion updates with private broadcast channels
+- In-app notification center with unread count and mark-read action
+- Browser notification permission support for live discussion events
 - Clickable task shortcuts for editing, discussion, subtasks, and status updates
 - In-app calendar page instead of a direct file download
 - Profile page, logout action, and feature menu on the dashboard
+- PWA-ready setup with service worker and web app manifest
 - Responsive UI built with Tailwind CSS and Inertia React pages
 
 ## System Structure
@@ -96,7 +101,7 @@ copy .env.example .env
 php artisan key:generate
 ```
 
-4. Configure your database and mail settings in .env.
+4. Configure your database, mail, and broadcast settings in .env.
 
 5. Run migrations:
 
@@ -109,6 +114,45 @@ php artisan migrate
 ```bash
 npm run build
 ```
+
+## Realtime Configuration (Pusher + Echo)
+
+To enable real-time task discussion updates, configure these values in `.env`:
+
+```env
+BROADCAST_CONNECTION=pusher
+PUSHER_APP_ID=your-app-id
+PUSHER_APP_KEY=your-app-key
+PUSHER_APP_SECRET=your-app-secret
+PUSHER_HOST=
+PUSHER_PORT=443
+PUSHER_SCHEME=https
+PUSHER_APP_CLUSTER=mt1
+
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+```
+
+Then run:
+
+```bash
+php artisan migrate
+php artisan optimize:clear
+```
+
+This project uses private task channels to ensure only authorized task members receive live events.
+
+## PWA Support
+
+The application includes:
+
+- `public/service-worker.js` for caching and push-notification hooks
+- `public/manifest.json` for installable app metadata
+
+Service worker registration is handled in `resources/js/bootstrap.ts`.
 
 ## Run Locally
 
@@ -164,8 +208,9 @@ php artisan optimize:clear
 3. Open the dashboard.
 4. Create personal or group tasks.
 5. Invite group members by email.
-6. Use the task discussion page for group chat.
+6. Use the task discussion page for group chat with real-time updates.
 7. Track tasks in list, Kanban, and calendar views.
+8. Review in-app notifications from the header bell menu.
 
 ## Quality Checks
 
