@@ -67,10 +67,11 @@ export default function Login({
                         name="role"
                         value={data.role}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        onChange={(e) => setData('role', e.target.value as 'admin' | 'student')}
+                        onChange={(e) => setData('role', e.target.value as 'admin' | 'team_leader' | 'student')}
                         required
                     >
                         <option value="student">Student</option>
+                        <option value="team_leader">Team Leader</option>
                         <option value="admin">Admin</option>
                     </select>
 

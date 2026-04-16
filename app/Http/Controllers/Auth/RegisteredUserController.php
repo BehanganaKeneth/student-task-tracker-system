@@ -108,6 +108,10 @@ class RegisteredUserController extends Controller
             return redirect()->route('login')->with('status', 'Admin account created and approved. Please log in.');
         }
 
+        if ($requestedRole === 'team_leader') {
+            return redirect()->route('login')->with('status', 'Team leader account created. Please verify your email and log in.');
+        }
+
         return redirect()->route('login')->with('status', 'Account created successfully. Please log in.');
     }
 }

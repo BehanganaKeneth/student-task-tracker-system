@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { PageProps, Task, TaskMessage } from '@/types';
@@ -12,9 +13,45 @@ type DiscussionProps = PageProps<{
 
 export default function Discussion({ task, messages }: DiscussionProps) {
     const user = usePage().props.auth.user;
+    const [liveMessages, setLiveMessages] = useState(messages);
     const { data, setData, post, processing, errors, reset } = useForm({
         message: '',
     });
+
+    useEffect(() => {
+        if (!window.Echo) {
+            return;
+        }
+
+        const channelName = `tasks.${task.id}`;
+        const channel = window.Echo.private(channelName);
+
+        channel.listen('.TaskMessageCreated', (event: TaskMessage) => {
+            setLiveMessages((current) => {
+                if (current.some((message) => message.id === event.id)) {
+                    return current;
+                }
+
+                return [
+                    ...current,
+                    {
+                        ...event,
+                        is_current_user: event.user_id === user.id,
+                    },
+                ];
+            });
+
+            if (event.user_id !== user.id && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification(`New message in ${task.title}`, {
+                    body: event.message,
+                });
+            }
+        });
+
+        return () => {
+            window.Echo?.leave(channelName);
+        };
+    }, [task.id, task.title, user.id]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,12 +100,12 @@ export default function Discussion({ task, messages }: DiscussionProps) {
                         </div>
 
                         <div className="max-h-[32rem] space-y-4 overflow-y-auto p-6">
-                            {messages.length === 0 ? (
+                            {liveMessages.length === 0 ? (
                                 <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
                                     No messages yet. Start the conversation for this task.
                                 </div>
                             ) : (
-                                messages.map((message) => (
+                                liveMessages.map((message) => (
                                     <div
                                         key={message.id}
                                         className={`flex ${message.is_current_user ? 'justify-end' : 'justify-start'}`}
@@ -110,7 +147,7 @@ export default function Discussion({ task, messages }: DiscussionProps) {
                                 />
                                 <InputError message={errors.message} />
                                 <div className="flex items-center justify-end gap-3">
-                                    {(task.is_owner || user.role === 'admin') && (
+                                    {(task.is_owner || user.role === 'admin' || user.role === 'team_leader') && (
                                         <Link href={route('tasks.edit', task.id)} className="text-sm text-gray-600 hover:text-gray-900">
                                             Edit task
                                         </Link>

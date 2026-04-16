@@ -86,7 +86,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    public const ROLES = ['admin', 'student'];
+    public const ROLES = ['admin', 'team_leader', 'student'];
 
     public function canApproveAdmins(): bool
     {
@@ -98,5 +98,10 @@ class User extends Authenticatable
     public function isAdminApproved(): bool
     {
         return $this->role !== 'admin' || $this->admin_approved_at !== null;
+    }
+
+    public function isTeamLeader(): bool
+    {
+        return $this->role === 'team_leader';
     }
 }

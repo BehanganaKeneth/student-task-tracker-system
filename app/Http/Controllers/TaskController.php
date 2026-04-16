@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TaskMessageCreated;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Mail\AdminApproved;
@@ -12,11 +13,13 @@ use App\Models\TaskMessage;
 use App\Models\Task;
 use App\Models\TaskSubtask;
 use App\Models\User;
+use App\Notifications\TaskActivityNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -258,6 +261,14 @@ class TaskController extends Controller
             $this->syncGroupInvitations($task, $groupMemberEmails->all(), $request->user());
         } else {
             $task->sharedUsers()->sync($sharedUserIds);
+
+            $this->notifyTaskParticipants(
+                $task,
+                $request->user(),
+                'Task shared',
+                "{$request->user()->name} shared task: {$task->title}",
+                route('tasks.edit', $task),
+            );
         }
 
         return redirect()->route('dashboard')->with('success', 'Task created successfully.');
@@ -375,6 +386,14 @@ class TaskController extends Controller
             $this->syncGroupInvitations($task, $groupMemberEmails->all(), $request->user());
         } else {
             $task->sharedUsers()->sync($sharedUserIds);
+
+            $this->notifyTaskParticipants(
+                $task,
+                $request->user(),
+                'Task updated',
+                "{$request->user()->name} updated task: {$task->title}",
+                route('tasks.edit', $task),
+            );
         }
 
         if (!$wasCompleted && $task->status === 'completed') {
@@ -395,10 +414,21 @@ class TaskController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        $task->messages()->create([
+        $message = $task->messages()->create([
             'user_id' => $request->user()->id,
             'message' => trim($data['message']),
         ]);
+
+        $message->load('user:id,name,email,role');
+        event(new TaskMessageCreated($message));
+
+        $this->notifyTaskParticipants(
+            $task,
+            $request->user(),
+            'New task message',
+            trim($data['message']),
+            route('tasks.discussion', $task),
+        );
 
         return redirect()->route('tasks.discussion', $task)->with('success', 'Message sent.');
     }
@@ -762,6 +792,22 @@ class TaskController extends Controller
                 }
             }
         }
+    }
+
+    private function notifyTaskParticipants(Task $task, User $actor, string $title, string $message, ?string $link = null): void
+    {
+        $participants = $task->sharedUsers()
+            ->where('users.id', '!=', $actor->id)
+            ->get();
+
+        if ($participants->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $participants,
+            new TaskActivityNotification($title, $message, $link, $task->id),
+        );
     }
 
     private function buildWeeklyPlan($tasks, int $studyHoursPerDay): array

@@ -84,6 +84,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if ($user->role === 'team_leader' && !$user->email_verified_at) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Please verify your email before signing in as a team leader.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

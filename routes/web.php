@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +19,8 @@ Route::get('/', function () {
 Route::get('/group-invites/{token}', [TaskController::class, 'showGroupInvite'])
     ->name('group-invites.show');
 
+Broadcast::routes(['middleware' => ['web', 'auth']]);
+
 // Protected routes (only for logged-in & verified users)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [TaskController::class, 'index'])->name('dashboard');
@@ -29,6 +33,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.approvals.approve');
     Route::get('/tasks/{task}/discussion', [TaskController::class, 'discussion'])->name('tasks.discussion');
     Route::post('/tasks/{task}/messages', [TaskController::class, 'storeMessage'])->name('tasks.messages.store');
+    Route::post('/notifications/mark-read', function (Request $request) {
+        $request->user()?->unreadNotifications->markAsRead();
+
+        return back()->with('success', 'Notifications marked as read.');
+    })->name('notifications.mark-read');
 
     Route::post('/tasks/{task}/subtasks', [TaskController::class, 'storeSubtask'])->name('tasks.subtasks.store');
     Route::patch('/tasks/{task}/subtasks/{subtask}/toggle', [TaskController::class, 'toggleSubtask'])

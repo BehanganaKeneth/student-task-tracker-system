@@ -68,15 +68,16 @@ export default function Register({ approverEmail }: { approverEmail: string }) {
                         id="role"
                         name="role"
                         value={data.role}
-                        onChange={(e) => setData('role', e.target.value as 'admin' | 'student')}
+                        onChange={(e) => setData('role', e.target.value as 'admin' | 'team_leader' | 'student')}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         required
                     >
                         <option value="student">Student</option>
+                        <option value="team_leader">Team Leader</option>
                         <option value="admin">Admin</option>
                     </select>
                     <p className="mt-2 text-xs text-gray-500">
-                        Admin accounts require approval by {approverEmail} before login.
+                        Team leaders have elevated task permissions. Admin accounts require approval by {approverEmail} before login.
                     </p>
                     <InputError message={errors.role} className="mt-2" />
                 </div>

@@ -22,7 +22,7 @@ class TaskPolicy
      */
     public function update(User $user, Task $task): bool
     {
-        return $task->user_id === $user->id || $user->role === 'admin';
+        return $task->user_id === $user->id || in_array($user->role, ['admin', 'team_leader'], true);
     }
 
     /**
@@ -30,6 +30,6 @@ class TaskPolicy
      */
     public function delete(User $user, Task $task): bool
     {
-        return $task->user_id === $user->id || $user->role === 'admin';
+        return $task->user_id === $user->id || in_array($user->role, ['admin', 'team_leader'], true);
     }
 }
