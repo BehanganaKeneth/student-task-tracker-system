@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -32,7 +33,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $notificationPayload = null;
 
-        if ($user) {
+        if ($user && Schema::hasTable('notifications')) {
             $unread = $user->unreadNotifications()->latest()->take(8)->get();
 
             $notificationPayload = [
