@@ -21,8 +21,8 @@ Route::get('/group-invites/{token}', [TaskController::class, 'showGroupInvite'])
 
 Broadcast::routes(['middleware' => ['web', 'auth']]);
 
-// Protected routes (only for logged-in & verified users)
-Route::middleware(['auth', 'verified'])->group(function () {
+// Protected routes (only for logged-in users)
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [TaskController::class, 'index'])->name('dashboard');
     Route::get('/admin/approvals', [TaskController::class, 'approvals'])->name('admin.approvals.index');
     Route::get('/tasks/calendar', [TaskController::class, 'calendar'])->name('tasks.calendar');
